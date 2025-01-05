@@ -1,28 +1,30 @@
 #include "STM32_QuadEncoder.h"
 
 STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, int channelPullUp, unsigned long pulsePerRotation, int direction) {
-    TIM_TypeDef *Instance  = (TIM_TypeDe~f *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
+    TIM_TypeDef *Instance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
     uint32_t channel_1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinA), PinMap_PWM));
     uint32_t channel_2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinB), PinMap_PWM));
 
     Encoder = new HardwareTimer(Instance);
 
-    if(Instance == TIM1) {
-        timerNumber = 1;
+    #if defined(TIM1_BASE)
+        if(Instance == TIM1) {
+            timerNumber = 1;
+        }
+    #endif
+    #if defined(TIM3_BASE)
+        if(Instance == TIM3) {
+            timerNumber = 3;
+        }
+    #endif
+    #if defined(TIM4_BASE)
+        if(Instance == TIM4) {
+            timerNumber = 4;
+        }
+    #endif
+    if (timerNumber == UNKNOWN_TIMER) {
+        Error_Handler();
     }
-    if(Instance == TIM2) {
-        timerNumber = 2;
-    }
-    if(Instance == TIM3) {
-        timerNumber = 3;
-    }
-    if(Instance == TIM4) {
-        timerNumber = 4;
-    }
-    if(Instance == TIM5) {
-        timerNumber = 5;
-    }
-    
 
     switch(channelPullUp) {
         case CHANNEL_12:
@@ -50,45 +52,45 @@ STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, int channelPu
     Encoder->refresh();
 }
 
-unsigned int getCount() {
-    return Encoder->getCount();
+unsigned long STM32_QuadEncoder::getCount() {
+    return Encoder->getCount(TICK_FORMAT);
 }
 
-void resetCount() {
+void STM32_QuadEncoder::resetCount() {
     Encoder->setCount(0);
 }
 
-void setCount(unsigned long value) {
+void STM32_QuadEncoder::setCount(unsigned long value) {
     Encoder->setCount(value);
 }
 
-int direction() {
-    Encoder->getDirection();
-}
+// int direction() {
+//     Encoder->getDirection();
+// }
 
-void attach(void (*func)()) {
+void STM32_QuadEncoder::attach(void (*func)()) {
     Encoder->attachInterrupt(timerNumber, (*func));
 }
 
-void detach() {
+void STM32_QuadEncoder::detach() {
     Encoder->detachInterrupt(timerNumber);
 }
 
-void setPPR(unsigned long pulsePerRotation) (
+void STM32_QuadEncoder::setPPR(unsigned long pulsePerRotation) {
     Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
     Encoder->resume();
     Encoder->refresh();
-)
+}
 
-unsigned long getPPR() (
+unsigned long STM32_QuadEncoder::getPPR() {
     return Encoder->getOverflow();
-)
+}
 
-bool hasInterrupt() {
+bool STM32_QuadEncoder::hasInterrupt() {
     return Encoder->hasInterrupt();
 }
 
-void setMode(int direction) {
+void STM32_QuadEncoder::setMode(int direction) {
     // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
     Encoder->resume();
     Encoder->refresh();

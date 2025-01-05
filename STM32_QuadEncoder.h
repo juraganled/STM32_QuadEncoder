@@ -21,10 +21,10 @@ static HardwareTimer *Encoder;
 class STM32_QuadEncoder {
     public:
         STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, int channel, unsigned long pulsePerRotation, int direction);
-        unsigned int getCount();
+        unsigned long getCount();
         void resetCount();
         void setCount(unsigned long value);
-        int direction();
+        // int direction();
         void attach(void (*func)());
         void detach();
         void setPPR(unsigned long pulsePerRotation);
@@ -34,7 +34,7 @@ class STM32_QuadEncoder {
 
 
     private:
-        int timerNumber;
+        int timerNumber = UNKNOWN_TIMER;
 };
 
 #endif
