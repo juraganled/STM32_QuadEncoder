@@ -34,16 +34,16 @@ class STM32_QuadEncoder {
         STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction);
         ~STM32_QuadEncoder();   // destructor
         void setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // Setup, only needed if no instance was passed to the constructor
-        unsigned long getCount();
-        void resetCount();
-        void setCount(unsigned long value);
-        CountingDirectionTypeDef direction();
-        void attach(void (*func)());
-        void detach();
-        void setPPR(unsigned long pulsePerRotation);
-        unsigned long getPPR();
-        bool hasInterrupt();
-        void setMode(int direction);
+        unsigned long getCount();   // get encoder value
+        void resetCount();          // set encoder value to zero
+        void setCount(unsigned long value); // set encoder value
+        CountingDirectionTypeDef getDirection();   // get encoder direction
+        void attach(void (*func)());    // attach a function to execute whenever there is overflow on encoder
+        void detach();  // remove any attached function
+        void setPPR(unsigned long pulsePerRotation);    // set encoder maximum counting
+        unsigned long getPPR(); // get maximum counting of the encoder
+        bool hasInterrupt();    // findout if there are any function attached
+        void setDirection(DirectionTypeDef direction);    // set encoder direction, useful for accomodating reversed encoder wiring
 
     private:
         int timerNumber = UNKNOWN_TIMER;

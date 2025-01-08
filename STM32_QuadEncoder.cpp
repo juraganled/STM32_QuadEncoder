@@ -90,7 +90,7 @@ void STM32_QuadEncoder::setCount(unsigned long value) {
     Encoder->setCount(value);
 }
 
-CountingDirectionTypeDef STM32_QuadEncoder::direction() {
+CountingDirectionTypeDef STM32_QuadEncoder::getDirection() {
     return (__HAL_TIM_IS_TIM_COUNTING_DOWN(Encoder->getHandle()) ? IS_COUNTING_DOWN : IS_COUNTING_UP);
 }
 
@@ -116,7 +116,7 @@ bool STM32_QuadEncoder::hasInterrupt() {
     return Encoder->hasInterrupt();
 }
 
-void STM32_QuadEncoder::setMode(int direction) {
+void STM32_QuadEncoder::setDirection(DirectionTypeDef direction) {
     // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinA, FILTER_DTS32_N8);
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinB, FILTER_DTS32_N8);
