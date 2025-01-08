@@ -1,24 +1,22 @@
 #include "STM32_QuadEncoder.h"
 
-STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, int channelPullUp, unsigned long pulsePerRotation, int direction) {
-    TIM_TypeDef *Instance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
-    uint32_t channel_1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinA), PinMap_PWM));
-    uint32_t channel_2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinB), PinMap_PWM));
-
-    Encoder = new HardwareTimer(Instance);
+STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
+    timerInstance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
+    globalPinA = pinA;
+    globalPinB = pinB;
 
     #if defined(TIM1_BASE)
-        if(Instance == TIM1) {
+        if(timerInstance == TIM1) {
             timerNumber = 1;
         }
     #endif
     #if defined(TIM3_BASE)
-        if(Instance == TIM3) {
+        if(timerInstance == TIM3) {
             timerNumber = 3;
         }
     #endif
     #if defined(TIM4_BASE)
-        if(Instance == TIM4) {
+        if(timerInstance == TIM4) {
             timerNumber = 4;
         }
     #endif
@@ -26,28 +24,33 @@ STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, int channelPu
         Error_Handler();
     }
 
+    Encoder = new HardwareTimer(timerInstance);
+    Encoder->pause();
+    // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
+    Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinA, FILTER_DTS32_N8);
+    Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinB, FILTER_DTS32_N8);
+    timerInstance->SMCR |= TIM_ENCODERMODE_TI12;
+    Encoder->setPrescaleFactor(4);
+	Encoder->setPreloadEnable(true);
+	Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
+
     switch(channelPullUp) {
-        case CHANNEL_12:
+        case CHANNEL_PULLUP_12:
             pinMode(pinA, INPUT_PULLUP);  //channel A
             pinMode(pinB, INPUT_PULLUP);  //channel B
             break;
-        case CHANNEL_1:
+        case CHANNEL_PULLUP_1:
             pinMode(pinA, INPUT_PULLUP);  //channel A
             break;
-        case CHANNEL_2:
+        case CHANNEL_PULLUP_2:
             pinMode(pinB, INPUT_PULLUP);  //channel B
             break;
-        case NO_PULLUP:
+        case CHANNEL_NO_PULLUP:
         default:
         break;
     }
 
-    Encoder->pause();
-    // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
-    Encoder->setPrescaleFactor(4);
-	Encoder->setPreloadEnable(true);
-	Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
-	Encoder->setCount(0);    
+	Encoder->setCount(0);
     Encoder->resume();
     Encoder->refresh();
 }
@@ -64,9 +67,9 @@ void STM32_QuadEncoder::setCount(unsigned long value) {
     Encoder->setCount(value);
 }
 
-// int direction() {
-//     Encoder->getDirection();
-// }
+int direction() {
+    // return __HAL_TIM_IS_TIM_COUNTING_DOWN(&(_timerObj.handle));
+}
 
 void STM32_QuadEncoder::attach(void (*func)()) {
     Encoder->attachInterrupt(timerNumber, (*func));
@@ -92,6 +95,8 @@ bool STM32_QuadEncoder::hasInterrupt() {
 
 void STM32_QuadEncoder::setMode(int direction) {
     // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
+    Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinA, FILTER_DTS32_N8);
+    Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinB, FILTER_DTS32_N8);
     Encoder->resume();
     Encoder->refresh();
 }
