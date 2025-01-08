@@ -27,9 +27,13 @@ typedef enum {
 
 static HardwareTimer *Encoder;
 
+/* Class --------------------------------------------------------*/
 class STM32_QuadEncoder {
     public:
+        STM32_QuadEncoder();    // constructor
         STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction);
+        ~STM32_QuadEncoder();   // destructor
+        void setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // Setup, only needed if no instance was passed to the constructor
         unsigned long getCount();
         void resetCount();
         void setCount(unsigned long value);

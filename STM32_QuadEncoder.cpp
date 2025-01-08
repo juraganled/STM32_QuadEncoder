@@ -1,6 +1,27 @@
 #include "STM32_QuadEncoder.h"
 
+STM32_QuadEncoder::STM32_QuadEncoder() {
+    Encoder = nullptr;
+    timerInstance = nullptr;
+}
+
+
 STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
+    setup(pinA, pinB, channelPullUp, pulsePerRotation, direction);
+}
+
+STM32_QuadEncoder::~STM32_QuadEncoder() {
+    Encoder->pause();
+    if (Encoder->hasInterrupt()) {
+        Encoder->detachInterrupt();
+    }
+    pinMode(globalPinA, INPUT);  // reset channel A to INPUT
+    pinMode(globalPinB, INPUT);  // reset channel B to INPUT
+    timerInstance = nullptr;
+    Encoder = nullptr;
+}
+
+void STM32_QuadEncoder::setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
     timerInstance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
     globalPinA = pinA;
     globalPinB = pinB;
@@ -34,6 +55,8 @@ STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUp
 	Encoder->setPreloadEnable(true);
 	Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
 
+    pinMode(pinA, INPUT);  // set default channel A to INPUT
+    pinMode(pinB, INPUT);  // set default channel B to INPUT
     switch(channelPullUp) {
         case CHANNEL_PULLUP_12:
             pinMode(pinA, INPUT_PULLUP);  //channel A
