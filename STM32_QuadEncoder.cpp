@@ -22,10 +22,14 @@ STM32_QuadEncoder::~STM32_QuadEncoder() {
 }
 
 void STM32_QuadEncoder::setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
+    // get timer instance to be referenced upon based on encoder input pin
     timerInstance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
+    
+    // store pin into global variables, will be used for setDirection function
     globalPinA = pinA;
     globalPinB = pinB;
 
+    // declare timer number, useful for attaching interrupt if needed
     #if defined(TIM1_BASE)
         if(timerInstance == TIM1) {
             timerNumber = 1;
@@ -45,35 +49,53 @@ void STM32_QuadEncoder::setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef
         Error_Handler();
     }
 
+    // init Encoder instance
     Encoder = new HardwareTimer(timerInstance);
+
+    // pause the timer
     Encoder->pause();
-    // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
+
+    // set timer into input capture, depending on the required direction it can be either falling or rising
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinA, FILTER_DTS32_N8);
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinB, FILTER_DTS32_N8);
+
+    // set timer SMCR register to encoder mode (SMS = 011)
     timerInstance->SMCR |= TIM_ENCODERMODE_TI12;
+
+    // set prescaler divide by 4, so that quadrature encoder incremented by one if there are total of 4 clocks from either pinA or pinB
     Encoder->setPrescaleFactor(4);
+
+    // set overflow enable
 	Encoder->setPreloadEnable(true);
+
+    // set encoder overflow value
 	Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
 
-    pinMode(pinA, INPUT);  // set default channel A to INPUT
-    pinMode(pinB, INPUT);  // set default channel B to INPUT
+    // configure encoder input pin with pull up if needed
     switch(channelPullUp) {
         case CHANNEL_PULLUP_12:
-            pinMode(pinA, INPUT_PULLUP);  //channel A
-            pinMode(pinB, INPUT_PULLUP);  //channel B
+            pinMode(pinA, INPUT_PULLUP);  // pull up on channel A
+            pinMode(pinB, INPUT_PULLUP);  // pull up on channel B
             break;
         case CHANNEL_PULLUP_1:
-            pinMode(pinA, INPUT_PULLUP);  //channel A
+            pinMode(pinA, INPUT_PULLUP);  // pull up on channel A only
+            pinMode(pinB, INPUT);   // channel B to INPUT
             break;
         case CHANNEL_PULLUP_2:
-            pinMode(pinB, INPUT_PULLUP);  //channel B
+            pinMode(pinA, INPUT);  // channel A to INPUT
+            pinMode(pinB, INPUT_PULLUP);  // pull up on channel B only
             break;
         case CHANNEL_NO_PULLUP:
         default:
+            pinMode(pinA, INPUT);  // set channel A to INPUT
+            pinMode(pinB, INPUT);  // set channel B to INPUT
         break;
     }
 
+    // reset encoder value to zero
 	Encoder->setCount(0);
+
+    // start encoder
     Encoder->resume();
     Encoder->refresh();
 }
