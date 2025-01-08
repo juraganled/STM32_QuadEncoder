@@ -20,6 +20,11 @@ typedef enum {
     DIRECTION_REVERSE       =   0x01U
 } DirectionTypeDef;
 
+typedef enum {
+    IS_COUNTING_UP          =   0x00U,
+    IS_COUNTING_DOWN        =   0x01U
+} CountingDirectionTypeDef;
+
 static HardwareTimer *Encoder;
 
 class STM32_QuadEncoder {
@@ -28,7 +33,7 @@ class STM32_QuadEncoder {
         unsigned long getCount();
         void resetCount();
         void setCount(unsigned long value);
-        int direction();
+        CountingDirectionTypeDef direction();
         void attach(void (*func)());
         void detach();
         void setPPR(unsigned long pulsePerRotation);

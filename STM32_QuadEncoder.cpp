@@ -67,8 +67,8 @@ void STM32_QuadEncoder::setCount(unsigned long value) {
     Encoder->setCount(value);
 }
 
-int direction() {
-    // return __HAL_TIM_IS_TIM_COUNTING_DOWN(&(_timerObj.handle));
+CountingDirectionTypeDef STM32_QuadEncoder::direction() {
+    return (__HAL_TIM_IS_TIM_COUNTING_DOWN(Encoder->getHandle()) ? IS_COUNTING_DOWN : IS_COUNTING_UP);
 }
 
 void STM32_QuadEncoder::attach(void (*func)()) {
