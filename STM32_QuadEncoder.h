@@ -34,6 +34,7 @@ class STM32_QuadEncoder {
         STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction);
         ~STM32_QuadEncoder();   // destructor
         void begin(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // Setup, only needed if no instance was passed to the constructor
+        void beginEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // same with begin but use encoder HAL
         unsigned long getCount();   // get encoder value
         void resetCount();          // set encoder value to zero
         void setCount(unsigned long value); // set encoder value
@@ -44,6 +45,7 @@ class STM32_QuadEncoder {
         unsigned long getPPR(); // get maximum counting of the encoder
         bool hasInterrupt();    // findout if there are any function attached
         void setDirection(DirectionTypeDef direction);    // set encoder direction, useful for accomodating reversed encoder wiring
+        void setEncoderDirection(DirectionTypeDef direction);   // similar with setDirection but uses encoder HAL
 
     private:
         int timerNumber = UNKNOWN_TIMER;

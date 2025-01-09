@@ -100,6 +100,100 @@ void STM32_QuadEncoder::begin(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef
     Encoder->refresh();
 }
 
+void STM32_QuadEncoder::beginEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
+    // get timer instance to be referenced upon based on encoder input pin
+    timerInstance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
+    
+    // store pin into global variables, will be used for setDirection function
+    globalPinA = pinA;
+    globalPinB = pinB;
+
+    // declare timer number, useful for attaching interrupt if needed
+    #if defined(TIM1_BASE)
+        if(timerInstance == TIM1) {
+            timerNumber = 1;
+        }
+    #endif
+    #if defined(TIM3_BASE)
+        if(timerInstance == TIM3) {
+            timerNumber = 3;
+        }
+    #endif
+    #if defined(TIM4_BASE)
+        if(timerInstance == TIM4) {
+            timerNumber = 4;
+        }
+    #endif
+    if (timerNumber == UNKNOWN_TIMER) {
+        Error_Handler();
+    }
+
+    // init Encoder instance
+    Encoder = new HardwareTimer(timerInstance);
+
+    // pause the timer
+    Encoder->pause();
+
+    // config encoder registers
+    channelEncoder.IC1Polarity = direction == DIRECTION_NORMAL ? TIM_ICPOLARITY_RISING : TIM_ICPOLARITY_FALLING;    // active edge of input signal 1
+    channelEncoder.IC1Selection = TIM_ICSELECTION_DIRECTTI; // input capture 1 selection
+    channelEncoder.IC1Prescaler = TIM_ICPSC_DIV1;	// input capture 1 prescaler 0x00
+    channelEncoder.IC1Filter = 0x0F; // input capture 1 filter
+    channelEncoder.IC2Polarity = TIM_ICPOLARITY_RISING; // active edge of input signal 2
+    channelEncoder.IC2Selection = TIM_ICSELECTION_DIRECTTI; // input capture 2 selection
+    channelEncoder.IC2Prescaler = TIM_ICPSC_DIV1;	// input capture 2 prescaler 0x00
+    channelEncoder.IC2Filter = 0x0F;    // input capture 2 filter
+    channelEncoder.EncoderMode = TIM_ENCODERMODE_TI12;  // use both channel
+
+    HAL_TIM_Encoder_Init(Encoder->getHandle(), &channelEncoder);
+
+    // set timer into input capture, depending on the required direction it can be either falling or rising
+    // Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinA, FILTER_DTS32_N8);
+    // Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, pinB, FILTER_DTS32_N8);
+
+    // set timer SMCR register to encoder mode (SMS = 011)
+    // timerInstance->SMCR |= TIM_ENCODERMODE_TI12;
+
+    // set prescaler divide by 4, so that quadrature encoder incremented by one if there are total of 4 clocks from either pinA or pinB
+    Encoder->setPrescaleFactor(4);
+
+    // set overflow enable
+	Encoder->setPreloadEnable(true);
+
+    // set encoder overflow value
+	Encoder->setOverflow(pulsePerRotation, TICK_FORMAT);
+
+    // configure encoder input pin with pull up if needed
+    switch(channelPullUp) {
+        case CHANNEL_PULLUP_12:
+            pinMode(pinA, INPUT_PULLUP);  // pull up on channel A
+            pinMode(pinB, INPUT_PULLUP);  // pull up on channel B
+            break;
+        case CHANNEL_PULLUP_1:
+            pinMode(pinA, INPUT_PULLUP);  // pull up on channel A only
+            pinMode(pinB, INPUT);   // channel B to INPUT
+            break;
+        case CHANNEL_PULLUP_2:
+            pinMode(pinA, INPUT);  // channel A to INPUT
+            pinMode(pinB, INPUT_PULLUP);  // pull up on channel B only
+            break;
+        case CHANNEL_NO_PULLUP:
+        default:
+            pinMode(pinA, INPUT);  // set channel A to INPUT
+            pinMode(pinB, INPUT);  // set channel B to INPUT
+        break;
+    }
+
+    // reset encoder value to zero
+	Encoder->setCount(0);
+
+    HAL_TIM_Encoder_Start(Encoder->getHandle(), TIM_CHANNEL_ALL);
+
+    // start encoder
+    Encoder->resume();
+    Encoder->refresh();
+}
+
 unsigned long STM32_QuadEncoder::getCount() {
     return Encoder->getCount(TICK_FORMAT);
 }
@@ -142,6 +236,19 @@ void STM32_QuadEncoder::setDirection(DirectionTypeDef direction) {
     // Encoder->setMode(1, direction == DIR_NORMAL ?? TIMER_ENCODER : TIMER_ENCODER_REVERSE)
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinA), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinA, FILTER_DTS32_N8);
     Encoder->setMode(STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(globalPinB), PinMap_PWM)), direction == DIRECTION_NORMAL ? TIMER_INPUT_CAPTURE_FALLING : TIMER_INPUT_CAPTURE_RISING, globalPinB, FILTER_DTS32_N8);
+    Encoder->resume();
+    Encoder->refresh();
+}
+
+void STM32_QuadEncoder::setEncoderDirection(DirectionTypeDef direction) {
+
+    // config encoder registers
+    channelEncoder.IC1Polarity = direction == DIRECTION_NORMAL ? TIM_ICPOLARITY_RISING : TIM_ICPOLARITY_FALLING;    // active edge of input signal 1
+    channelEncoder.IC2Polarity = TIM_ICPOLARITY_RISING; // active edge of input signal 2
+
+    HAL_TIM_Encoder_Init(Encoder->getHandle(), &channelEncoder);
+    HAL_TIM_Encoder_Start(Encoder->getHandle(), TIM_CHANNEL_ALL);
+
     Encoder->resume();
     Encoder->refresh();
 }
