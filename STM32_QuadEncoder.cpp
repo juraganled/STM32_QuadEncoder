@@ -138,11 +138,11 @@ void STM32_QuadEncoder::beginEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUp
     channelEncoder.IC1Polarity = direction == DIRECTION_NORMAL ? TIM_ICPOLARITY_RISING : TIM_ICPOLARITY_FALLING;    // active edge of input signal 1
     channelEncoder.IC1Selection = TIM_ICSELECTION_DIRECTTI; // input capture 1 selection
     channelEncoder.IC1Prescaler = TIM_ICPSC_DIV1;	// input capture 1 prescaler 0x00
-    channelEncoder.IC1Filter = 0x0F; // input capture 1 filter
+    channelEncoder.IC1Filter = FILTER_DTS32_N8; // input capture 1 filter
     channelEncoder.IC2Polarity = TIM_ICPOLARITY_RISING; // active edge of input signal 2
     channelEncoder.IC2Selection = TIM_ICSELECTION_DIRECTTI; // input capture 2 selection
     channelEncoder.IC2Prescaler = TIM_ICPSC_DIV1;	// input capture 2 prescaler 0x00
-    channelEncoder.IC2Filter = 0x0F;    // input capture 2 filter
+    channelEncoder.IC2Filter = FILTER_DTS32_N8;    // input capture 2 filter
     channelEncoder.EncoderMode = TIM_ENCODERMODE_TI12;  // use both channel
 
     HAL_TIM_Encoder_Init(Encoder->getHandle(), &channelEncoder);
