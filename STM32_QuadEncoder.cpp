@@ -7,7 +7,7 @@ STM32_QuadEncoder::STM32_QuadEncoder() {
 
 
 STM32_QuadEncoder::STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
-    setup(pinA, pinB, channelPullUp, pulsePerRotation, direction);
+    begin(pinA, pinB, channelPullUp, pulsePerRotation, direction);
 }
 
 STM32_QuadEncoder::~STM32_QuadEncoder() {
@@ -21,7 +21,7 @@ STM32_QuadEncoder::~STM32_QuadEncoder() {
     Encoder = nullptr;
 }
 
-void STM32_QuadEncoder::setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
+void STM32_QuadEncoder::begin(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channelPullUp, unsigned long pulsePerRotation, DirectionTypeDef direction) {
     // get timer instance to be referenced upon based on encoder input pin
     timerInstance  = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pinA), PinMap_PWM);
     

@@ -33,7 +33,7 @@ class STM32_QuadEncoder {
         STM32_QuadEncoder();    // constructor
         STM32_QuadEncoder(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction);
         ~STM32_QuadEncoder();   // destructor
-        void setup(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // Setup, only needed if no instance was passed to the constructor
+        void begin(uint32_t pinA, uint32_t pinB, ChannelPullUpTypeDef channel, unsigned long pulsePerRotation, DirectionTypeDef direction); // Setup, only needed if no instance was passed to the constructor
         unsigned long getCount();   // get encoder value
         void resetCount();          // set encoder value to zero
         void setCount(unsigned long value); // set encoder value
@@ -50,6 +50,7 @@ class STM32_QuadEncoder {
         uint32_t globalPinA;
         uint32_t globalPinB;
         TIM_TypeDef *timerInstance;
+        TIM_Encoder_InitTypeDef channelEncoder;
 };
 
 #endif
