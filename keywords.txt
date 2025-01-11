@@ -1,0 +1,37 @@
+############################################
+# Syntax Coloring Map For STM32_QuadEncoder
+############################################
+
+############################################
+# Datatypes (KEYWORD1)
+############################################
+
+STM32_QuadEncoder   KEYWORD1
+
+############################################
+# Methods and Functions (KEYWORD2)
+############################################
+
+begin   KEYWORD2
+getCount    KEYWORD2
+resetCount  KEYWORD2
+setCount    KEYWORD2
+getDirection    KEYWORD2
+attach  KEYWORD2
+detach  KEYWORD2
+setPPR  KEYWORD2
+getPPR  KEYWORD2
+hasInterrupt    KEYWORD2
+setDirection    KEYWORD2
+getTimerNumber  KEYWORD2
+
+############################################
+# Constants (LITERAL1)
+############################################
+
+NO_PULLUP   LITERAL1
+WITH_PULLUP LITERAL1
+DIRECTION_NORMAL    LITERAL1
+DIRECTION_REVERSE   LITERAL1
+IS_COUNTING_UP  LITERAL1
+IS_COUNTING_DOWN    LITERAL1
