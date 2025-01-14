@@ -1,5 +1,3 @@
-Here is a `README.md` file to describe the STM32_QuadEncoder library and its usage examples:
-
 ```markdown
 # STM32_QuadEncoder Library
 
