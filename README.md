@@ -1,4 +1,3 @@
-```markdown
 # STM32_QuadEncoder Library
 
 STM32_QuadEncoder is an Arduino-compatible library for STM32 microcontrollers that simplifies the handling of quadrature encoders using the hardware timers built into STM32 boards. By offloading encoder logic to hardware timers, the library frees up CPU resources, making it ideal for real-time applications.
@@ -24,7 +23,6 @@ STM32_QuadEncoder is an Arduino-compatible library for STM32 microcontrollers th
 1. Connect your quadrature encoder to the STM32 pins (A and B signals).
 2. Initialize the `STM32_QuadEncoder` object in your sketch.
 3. Use the library methods to read counts, detect direction, and handle overflow events.
-```
 
 ### Example Code
 
